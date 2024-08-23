@@ -91,6 +91,7 @@ class SynthModularCell:
             print(f"Processing sound with input_signal: {input_signal.shape}, modulator_signal: {modulator_signal}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
         else:
             print(f"Processing sound with input_signal: {input_signal}, modulator_signal: {modulator_signal}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
+        #print(f"Processing sound with input_signal: {input_signal.shape}, modulator_signal: {modulator_signal}, params: {params}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
         signal = self.module.process_sound(input_signal, modulator_signal, params, sample_rate, signal_duration,
                                            batch_size)
 

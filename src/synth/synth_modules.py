@@ -342,9 +342,14 @@ class SawSquareOscillator(SynthModule):
         self._verify_input_params(params)
 
         active_signal = params.get('active', None)
+        # active is bool, so we don't want to convert it to 0.0 or 1.0
+        # because _process_active_signal won't see it as a boolean
+        # and then will try to apply gumbel_softmax to it
+        """
         if active_signal is not None:
             active_signal = self._standardize_input(active_signal, requested_dtype=torch.float32, requested_dims=2,
                                                     batch_size=batch_size)
+        """
         active_signal = self._process_active_signal(active_signal, batch_size)
 
         square_amp = self._standardize_input(params['square_amp'], requested_dtype=torch.float32, requested_dims=2,
