@@ -108,6 +108,7 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
             if c_audio.dtype == 'float64':
                 c_audio = np.float32(c_audio)
 
+            print(f"Audio data shape: {c_audio.shape}, dtype: {c_audio.dtype}, max value: {c_audio.max()}, min value: {c_audio.min()}")
             scipy.io.wavfile.write(audio_path, synth_constants.sample_rate, c_audio)
             print(f"Generated {file_name}")
 

@@ -100,6 +100,9 @@ class SynthModularCell:
 
         self.signal = signal
 
+    def __str__(self):
+        return f"SynthModularCell({self.index}, {self.operation}, {self.parameters})"
+
 
 class SynthModular(torch.nn.Module):
     """

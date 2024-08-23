@@ -103,7 +103,9 @@ class SynthModule(ABC):
         return output_tensor
 
     def _verify_input_params(self, params_to_test: dict):
+        print(f"Verifying input parameters: {params_to_test}")
         expected_params = self.synth_structure.modular_synth_params[self.name]
+        print(f"Expected input parameters: {expected_params}")
         assert set(expected_params).issubset(set(params_to_test.keys())),\
             f'Expected input parameters {expected_params} but got {list(params_to_test.keys())}'
 
@@ -114,6 +116,13 @@ class SynthModule(ABC):
             ret_active_vector = torch.ones([batch_size, 1], dtype=torch.long, device=self.device)
             print(f"Returning default active_vector: {ret_active_vector.shape}")
             return ret_active_vector
+
+        # Convert to a tensor if it is a list
+        if isinstance(active_vector, list):
+            print(f"Converting active_vector to tensor", active_vector)
+            #active_vector = torch.tensor(active_vector, device=self.device).unsqueeze(1)
+            active_vector = torch.tensor(active_vector, device=self.device)
+            print(f"Converted active_vector to tensor", active_vector)
 
         print(f"Input active_vector: {active_vector.shape}, {active_vector}")
 
@@ -429,11 +438,17 @@ class FMOscillator(Oscillator):
         Raises:
             ValueError: Provided variables are out of range
         """
+        print(f"Inside FMOscillator.process_sound")
 
         self._verify_input_params(params)
 
+        print(f"before _process_active_signal, active: {params.get('active', None)}")
         active_signal = self._process_active_signal(params.get('active', None), batch_size)
+        print(f"after _process_active_signal, active: {params.get('active', None)}")
+
+        print(f"before _process_active_signal, fm_active: {params.get('fm_active', None)}")
         fm_active_signal = self._process_active_signal(params.get('fm_active', None), batch_size)
+        print(f"after _process_active_signal, fm_active: {params.get('fm_active', None)}")
 
         parsed_params = {}
         for k in ['amp_c', 'freq_c', 'mod_index']:
@@ -519,6 +534,7 @@ class SurrogateFMOscillator(SurrogateOscillator):
         Raises:
             ValueError: Provided variables are out of range
         """
+        print(f"Inside SurrogateFMOscillator.process_sound")
 
         self._verify_input_params(params)
 
@@ -590,11 +606,23 @@ class FMLfoOscillator(Oscillator):
         Raises:
             ValueError: Provided variables are out of range
         """
+        print(f"Inside FMLfoOscillator.process_sound")
+        print(f"Input params: {params}")
 
         self._verify_input_params(params)
 
         active_signal = self._process_active_signal(params.get('active', None), batch_size)
+
+        # Convert 'fm_active' to a tensor if it is a list
+        if isinstance(params.get('fm_active'), list):
+            print(f"Converting 'fm_active' to tensor", params['fm_active'])
+            #params['fm_active'] = torch.tensor(params['fm_active'], dtype=torch.float32, device=self.device).unsqueeze(1)
+            #params['fm_active'] = torch.tensor(params['fm_active'], device=self.device).unsqueeze(1)
+            params['fm_active'] = torch.tensor(params['fm_active'], device=self.device)
+            print(f"Converted 'fm_active' to tensor", params['fm_active'])
+
         fm_active_signal = self._process_active_signal(params.get('fm_active', None), batch_size)
+        print(f"Processed fm_active_signal: {fm_active_signal.shape}")
 
         parsed_params = {}
         for k in ['amp_c', 'freq_c', 'fm_lfo_mod_index']:
@@ -990,7 +1018,7 @@ class Mix(SynthModule):
         # input_signal = [n_signals, batch_size, sample_rate * siganl_duration]
         # factor = [n_signals, batch_size] or [batch_size]
 
-        assert input_signal.shape[1] == batch_size and input_signal.shape[2] == sample_rate * signal_duration
+        assert input_signal.shape[1] == batch_size and input_signal.shape[2] == sample_rate * signal_duration, f"Input signal shape {input_signal.shape} does not match batch size {batch_size} and signal duration {sample_rate * signal_duration}"
 
         if params is not None:
             factor = params.get("mix_factor", None)
@@ -1036,6 +1064,7 @@ def get_synth_module(op_name: str, device: str, synth_structure: SynthConstants)
     """
     Get appropriate synth module according to the given operation name
     """
+    print(f"get_synth_module: {op_name}, {device}, {synth_structure}")
 
     if op_name is None or op_name in ['None', 'none']:
         return Noop('none', device, synth_structure)
@@ -1049,7 +1078,12 @@ def get_synth_module(op_name: str, device: str, synth_structure: SynthConstants)
     elif op_name in ['lfo_sine', 'lfo_square', 'lfo_saw']:
         waveform = op_name.split('_')[1]
         return Oscillator(op_name, device, synth_structure, waveform)
-    elif op_name in ['fm', 'fm_lfo']:
+    # Why? Fixed this
+    #elif op_name in ['fm', 'fm_lfo']:
+    #    return FMLfoOscillator(op_name, device, synth_structure)
+    elif op_name in ['fm']:
+        return FMOscillator(op_name, device, synth_structure)
+    elif op_name in ['fm_lfo']:
         return FMLfoOscillator(op_name, device, synth_structure)
     elif op_name in ['fm_sine', 'fm_square', 'fm_saw']:
         waveform = op_name.split('_')[1]
