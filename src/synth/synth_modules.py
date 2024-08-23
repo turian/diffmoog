@@ -108,12 +108,14 @@ class SynthModule(ABC):
             f'Expected input parameters {expected_params} but got {list(params_to_test.keys())}'
 
     def _process_active_signal(self, active_vector: TensorLike, batch_size: int) -> torch.Tensor:
-        print(f"Input active_vector: {active_vector.shape}, {active_vector}")
 
         if active_vector is None:
+            print("Input active_vector: None")
             ret_active_vector = torch.ones([batch_size, 1], dtype=torch.long, device=self.device)
             print(f"Returning default active_vector: {ret_active_vector.shape}")
             return ret_active_vector
+
+        print(f"Input active_vector: {active_vector.shape}, {active_vector}")
 
         if not isinstance(active_vector, torch.Tensor):
             active_vector = torch.tensor(active_vector)

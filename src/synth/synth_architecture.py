@@ -87,7 +87,7 @@ class SynthModularCell:
                         ValueError("Illegal parameter for the provided operation")
 
     def generate_signal(self, input_signal, modulator_signal, params, sample_rate, signal_duration, batch_size):
-        if input_signal:
+        if input_signal is not None:
             print(f"Processing sound with input_signal: {input_signal.shape}, modulator_signal: {modulator_signal}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
         else:
             print(f"Processing sound with input_signal: {input_signal}, modulator_signal: {modulator_signal}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
