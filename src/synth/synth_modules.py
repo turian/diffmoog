@@ -108,22 +108,31 @@ class SynthModule(ABC):
             f'Expected input parameters {expected_params} but got {list(params_to_test.keys())}'
 
     def _process_active_signal(self, active_vector: TensorLike, batch_size: int) -> torch.Tensor:
+        print(f"Input active_vector: {active_vector.shape}, {active_vector}")
 
         if active_vector is None:
             ret_active_vector = torch.ones([batch_size, 1], dtype=torch.long, device=self.device)
+            print(f"Returning default active_vector: {ret_active_vector.shape}")
             return ret_active_vector
 
         if not isinstance(active_vector, torch.Tensor):
             active_vector = torch.tensor(active_vector)
+            print(f"Converted active_vector to tensor: {active_vector.shape}")
 
         if active_vector.dtype == torch.bool:
             ret_active_vector = active_vector.long().unsqueeze(1).to(self.device)
+            print(f"Returning processed active_vector (bool to long): {ret_active_vector.shape}")
             return ret_active_vector
 
+        print(f"Before standardization: active_vector.shape={active_vector.shape}")
         standartized_active_vector = self._standardize_input(active_vector, requested_dtype=torch.float32, requested_dims=2,
                                                 batch_size=batch_size)
+        print(f"Standardized active_vector: {standartized_active_vector.shape}")
         active_vector_gumble = gumbel_softmax(standartized_active_vector, hard=True, device=self.device)
+        print(f"active_vector_gumble: {active_vector_gumble.shape}")
         ret_active_vector = active_vector_gumble[:, 1:]
+
+        print(f"Returning processed active_vector (gumbel_softmax): {ret_active_vector.shape}")
 
         return ret_active_vector
 
@@ -169,17 +178,28 @@ class Oscillator(SynthModule):
         self._verify_input_params(params)
 
         active_signal = params.get('active', None)
+        # active is bool, so we don't want to convert it to 0.0 or 1.0
+        # because _process_active_signal won't see it as a boolean
+        # and then will try to apply gumbel_softmax to it
+        """
         if active_signal is not None:
+            print(f"Initial active_signal: {active_signal.shape}, contents: {active_signal}")
             active_signal = self._standardize_input(active_signal, requested_dtype=torch.float32, requested_dims=2,
                                                     batch_size=batch_size)
+            print(f"Standardized active_signal: {active_signal.shape}, contents: {active_signal}")
+        """
         active_signal = self._process_active_signal(active_signal, batch_size)
+        print(f"Processed active_signal (after gumbel_softmax): {active_signal.shape}, contents: {active_signal}")
 
         if 'amp' not in params:
+            print("'amp' not in params")
             self._amp_warning()
             amp = torch.ones((batch_size, 1), dtype=torch.float32, device=self.device)
         else:
+            print("'amp' in params: ", params['amp'].shape)
             amp = self._standardize_input(params['amp'], requested_dtype=torch.float32, requested_dims=2,
                                           batch_size=batch_size)
+            print("standardized amp: ", amp.shape)
         freq = self._standardize_input(params['freq'], requested_dtype=torch.float32, requested_dims=2,
                                        batch_size=batch_size)
 
