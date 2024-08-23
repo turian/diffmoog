@@ -193,6 +193,7 @@ class Oscillator(SynthModule):
         freq = active_signal * freq
         phase = active_signal * phase
 
+        print(f"Generating wave tensors with t: {t.shape}, amp: {amp}, freq: {freq}, phase: {phase}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
         wave_tensors = self._generate_wave_tensors(t, amp, freq, phase_mod=phase, sample_rate=sample_rate,
                                                    signal_duration=signal_duration)
 
@@ -211,6 +212,9 @@ class Oscillator(SynthModule):
 
         wave_tensors = {}
 
+        print(f"Inside _generate_wave_tensors: amp.shape={amp.shape}, freq.shape={freq.shape}, t.shape={t.shape}, phase_mod.shape={phase_mod.shape}")
+        if amp.size(0) == 0 or freq.size(0) == 0 or t.size(0) == 0:
+            print("Error: One of the tensors has a size of 0")
         if self.waveform == 'sine' or self.waveform is None:
             sine_wave = amp * torch.sin(TWO_PI * freq * t + phase_mod)
             wave_tensors['sine'] = sine_wave

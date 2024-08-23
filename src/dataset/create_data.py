@@ -64,6 +64,7 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
         sampled_parameters = params_sampler.generate_activations_and_chains(synth_obj.synth_matrix, signal_duration,
                                                                             note_off_time, num_sounds_=batch_size)
         synth_obj.update_cells_from_dict(sampled_parameters)
+        print(f"Creating dataset with chain: {chain}, signal_duration: {signal_duration}, batch_size: {batch_size}")
         synth_obj.generate_signal(signal_duration=signal_duration, batch_size=batch_size)
         audio = synth_obj.get_final_signal()
 

@@ -87,6 +87,7 @@ class SynthModularCell:
                         ValueError("Illegal parameter for the provided operation")
 
     def generate_signal(self, input_signal, modulator_signal, params, sample_rate, signal_duration, batch_size):
+        print(f"Processing sound with input_signal: {input_signal.shape}, modulator_signal: {modulator_signal}, params: {params}, sample_rate: {sample_rate}, signal_duration: {signal_duration}")
         signal = self.module.process_sound(input_signal, modulator_signal, params, sample_rate, signal_duration,
                                            batch_size)
 
@@ -143,6 +144,8 @@ class SynthModular(torch.nn.Module):
                 if audio_inputs is not None and len(audio_inputs) == 1:
                     audio_inputs = audio_inputs[0]
 
+                #print(f"Generating signal for cell: {cell}, audio_inputs: {audio_inputs}, control_input: {control_input}, parameters: {cell.parameters}, sample_rate: {self.sample_rate}")
+                print(f"Generating signal for cell: {cell}, audio_inputs: {audio_inputs}, control_input: {control_input}, sample_rate: {self.sample_rate}")
                 cell.generate_signal(audio_inputs, control_input, cell.parameters, self.sample_rate,
                                      signal_duration, batch_size)
 
