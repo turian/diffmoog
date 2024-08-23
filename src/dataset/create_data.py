@@ -39,6 +39,7 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
 
     print(f"Creating dataset \n Size = {size}")
     print(f" Type = {split} \n")
+    print(f" Chain = {chain} \n")
 
     # init paths
     dataset_dir_path = os.path.join(output_dir, split.lower(), '')

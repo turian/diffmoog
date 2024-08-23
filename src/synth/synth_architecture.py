@@ -18,6 +18,7 @@ class SynthModularCell:
                  operation=None,
                  parameters=None,
                  signal=None,
+                 output=None,
                  outputs=None,
                  switch_outputs=None,
                  allow_multiple=None,
@@ -25,6 +26,10 @@ class SynthModularCell:
                  default_connection=False,
                  synth_constants: SynthConstants = None,
                  device: str = 'cuda:0'):
+        
+        if output is not None:
+            assert outputs is None, "Illegal input_list"
+            outputs = [output]
 
         self.check_inputs(index, audio_input, outputs, switch_outputs, operation, parameters, synth_constants)
 
@@ -33,7 +38,12 @@ class SynthModularCell:
         self.module = get_synth_module(operation, device, synth_constants)
 
         if default_connection:
-            self.audio_input = None
+            # Automatically connect to the previous layer in the same channel
+            if index[1] > 0:  # Ensure we're not in the first layer
+                self.audio_input = [[index[0], index[1] - 1]]
+            else:
+                self.audio_input = None
+            #self.audio_input = None
             self.control_input = None
             self.outputs = None
             self.switch_outputs = None
@@ -134,6 +144,7 @@ class SynthModular(torch.nn.Module):
         for channel_idx in range(n_channels):
             for layer_idx in range(n_layers):
                 cell = chain.get((channel_idx, layer_idx), {'index': (channel_idx, layer_idx)})
+                print(f"Applying cell: {cell} ({channel_idx, layer_idx}) with index: {cell['index']} and synth_constants: {self.synth_constants}")
                 self.synth_matrix[channel_idx][layer_idx] = SynthModularCell(**cell, device=self.device,
                                                                              synth_constants=self.synth_constants)
 
