@@ -265,6 +265,7 @@ FM = [
     {'index': (0, 1), 'operation': 'fm', 'default_connection': True}
 ]
 
+# BROKEN. It lacks a carrier signal and, likely, the necessary parameters, leading to the errors observed.
 FM_ONLY = [
     {'index': (0, 1), 'operation': 'fm', 'default_connection': True}
 ]

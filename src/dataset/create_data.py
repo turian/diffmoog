@@ -5,6 +5,7 @@ sys.path.append("..")
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import pandas as pd
+import torch
 import numpy as np
 import sys
 import subprocess
@@ -59,6 +60,7 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
     # Create data
     samples_created = 0
     while samples_created < size:
+        print(f"Samples created: {samples_created} of {size}")
 
         # Generate batch
         sampled_parameters = params_sampler.generate_activations_and_chains(synth_obj.synth_matrix, signal_duration,
@@ -68,13 +70,27 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
         synth_obj.generate_signal(signal_duration=signal_duration, batch_size=batch_size)
         audio = synth_obj.get_final_signal()
 
+        print(f"get_final_signal Audio shape: {audio.shape}")
+
         # Save samples
         for j in range(batch_size):
             sample_idx = samples_created
 
             sample_params = extract_single_sample_params(sampled_parameters, j)
+            print(f"Sample params: {sample_params}")
+
+            # As per comments there, it's only really working for MODULAR chain
+            # We can use other techniques downstream to filter out
+    	    # "inactive" samples (i.e. In a synthesizer or signal
+            # processing context, "active" generally means that a
+            # particular oscillator, filter, or other module is
+            # producing a signal that will be part of the final audio
+            # output)
+
+            """
             if not _verify_activity(sample_params):
                 continue
+            """
 
             dataset_parameters.append(sample_params)
 
@@ -85,6 +101,8 @@ def create_dataset(chain: str, output_dir: str, split: str, size: int, signal_du
             else:
                 c_audio = audio
             c_audio = c_audio.squeeze()
+            if torch.max(torch.abs(c_audio)) == 0.0:
+                continue
             c_audio = c_audio.detach().cpu().numpy()
 
             if c_audio.dtype == 'float64':
